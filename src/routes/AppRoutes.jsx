@@ -1,4 +1,10 @@
-import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import {
+	Routes,
+	Route,
+	Navigate,
+	useNavigate,
+	useLocation,
+} from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Dashboard, Sidebar } from "../components/layout";
 import { ManageBookings } from "../features/booking";
@@ -23,9 +29,11 @@ import OtpScreen from "../pages/OtpScreen";
 import RoleProtectedRoute from "../auth/RoleProtectedRoute";
 import AccessDenied from "../pages/AccessDenied";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import OtpManagement from "../features/user/OtpManagement";
 
 export default function AppRoutes() {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	// Initialize sidebar state from localStorage or default to false
 	const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -45,6 +53,16 @@ export default function AppRoutes() {
 		setSidebarCollapsed(!sidebarCollapsed);
 	};
 
+	const hideSidebarRoutes = [
+		/^\/find-bookings\/[^/]+$/, // regex for /find-bookings/:bid
+		/^\/email-preview$/,
+		/^\/revenue\/details\/[^/]+$/, // regex for /revenue/details/:bid
+	];
+
+	const shouldHideSidebar = hideSidebarRoutes.some((regex) =>
+		regex.test(location.pathname)
+	);
+
 	return (
 		<Routes>
 			<Route path="/login" element={<Login />} />
@@ -55,10 +73,12 @@ export default function AppRoutes() {
 					<ProtectedRoute>
 						<div className="min-w-full h-screen box-border bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
 							<div className="flex w-full h-full">
-								<Sidebar
-									collapsed={sidebarCollapsed}
-									onToggleCollapse={handleToggleSidebar}
-								/>
+								{!shouldHideSidebar && (
+									<Sidebar
+										collapsed={sidebarCollapsed}
+										onToggleCollapse={handleToggleSidebar}
+									/>
+								)}
 								<div className="flex-1 overflow-y-auto">
 									<div className="p-4 h-full">
 										<Routes>
@@ -128,6 +148,10 @@ export default function AppRoutes() {
 														<ManageData />
 													</RoleProtectedRoute>
 												}
+											/>
+											<Route
+												path="otp-management"
+												element={<OtpManagement />}
 											/>
 											<Route
 												path="ip-setting"

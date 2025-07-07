@@ -27,9 +27,11 @@ export const ETicket = ({ bookingData }) => {
 		zip = "",
 		country = "US",
 		passenger_data = [],
+		charge_data = [],
 		itinerary_details = "",
 		bid = "",
 		agent_name = "",
+		amount = "",
 	} = bookingData;
 
 	const fullAddress = [billing_address, city, state, zip, country]
@@ -56,13 +58,6 @@ export const ETicket = ({ bookingData }) => {
 						Thank you for choosing <strong>{airline_name}</strong>. I've
 						attached your e-tickets to this email for your upcoming journey.
 					</Text>
-					<Text>
-						The total cost to change this itinerary including all taxes and fees
-						would be:{" "}
-						<strong>
-							{currency} {total_cost || "165.30"}
-						</strong>
-					</Text>
 
 					<Text style={subheading}>Travel Details:</Text>
 					<table style={table}>
@@ -85,7 +80,6 @@ export const ETicket = ({ bookingData }) => {
 								: null}
 						</tbody>
 					</table>
-
 					<Text style={subheading}>Important Notes:</Text>
 					<ol style={listStyle}>
 						<li style={listItem}>
@@ -121,21 +115,16 @@ export const ETicket = ({ bookingData }) => {
 							<strong>+1(855) 623-7022</strong>
 						</li>
 					</ol>
-
 					<Text>
 						Your attached e-ticket contains all the necessary details, including
 						seat information and check-in instructions.
 					</Text>
-
 					<Text>
 						We value your business and look forward to serving your travel needs
 						in the near future.
 					</Text>
-
 					<Text>Thank you, and we wish you a pleasant journey!</Text>
-
 					<Text>Best regards,</Text>
-
 					<Text style={footerText}>
 						Still, have questions? Call us at <strong>+1(855) 623-7022</strong>.
 						Our agents are available 24 hours a day, 7 days a week to assist

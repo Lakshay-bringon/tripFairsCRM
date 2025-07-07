@@ -135,3 +135,16 @@ export const deleteUserApi = async (id) => {
 		throw new Error(err.message);
 	}
 };
+
+export const getOtpApi = async () => {
+	try {
+		const res = await API.get("/getOtp");
+		const { status, msg, data } = res.data;
+		if (status !== 200) throw new Error(msg || "Failed to get OTP");
+		return data;
+	} catch (err) {
+		if (err.response)
+			throw new Error(err.response.data.msg || "Failed to get OTP");
+		throw new Error(err.message);
+	}
+};

@@ -380,7 +380,7 @@ export const findBookingApi = async (searchData) => {
 	}
 };
 
-export const getBookingByBid = async (bid) => {
+export const getBookingByBid = async (bid, userId) => {
 	try {
 		const res = await API.get(`/getBookingByBid`, {
 			headers: {
@@ -389,6 +389,7 @@ export const getBookingByBid = async (bid) => {
 			},
 			params: {
 				bid: bid,
+				userId: userId, // Pass userId if needed for authorization
 			},
 		});
 

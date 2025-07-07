@@ -23,6 +23,7 @@ export default function FindBookings() {
 		cchName: "cchName",
 		email: "email",
 		billingPhone: "billingPhone",
+		pnr: "pnr",
 	};
 
 	// Fetch recent bookings function
@@ -109,6 +110,7 @@ export default function FindBookings() {
 						<option value="cchName">CCH NAME</option>
 						<option value="email">EMAIL</option>
 						<option value="billingPhone">BILLING PHONE</option>
+						<option value="pnr">PNR</option>
 						{/* <option value="PNR">PNR</option> */}
 					</select>
 					<input

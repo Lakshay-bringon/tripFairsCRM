@@ -52,7 +52,7 @@ export default function BookingDetailsHeader({
 
 		// If we're on a revenue route, go back to revenue/details
 		if (currentPath.includes("/revenue/details/")) {
-			return "/revenue/details";
+			return "/revenue";
 		}
 
 		// Default to find-bookings for booking routes

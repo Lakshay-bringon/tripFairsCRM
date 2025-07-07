@@ -163,17 +163,32 @@ export const EmailUpgrade = ({ bookingData }) => {
 					<Text style={subheading}>Price Details and Agreement:</Text>
 					<Text>
 						As per our telephonic conversation and as agreed, I{" "}
-						<strong>{customer_name}</strong>, authorize TripFairs LLC / PayPal /
-						Travel Charges T F / Reservation Charges T F to charge my
-						Debit/Credit card for{" "}
+						<strong>{customer_name}</strong>, authorize TripFairs LLC / Travel
+						Charges T F / Reservation Charges T F to charge my Debit/Credit card
+						for{" "}
 						<strong>
 							{amount} {currency}
 						</strong>{" "}
 						as per given details for <strong>Upgrade</strong>. I understand that
 						this charge is non-refundable. In your next bank statement you will
-						see this charge as split transaction which include base
-						fare,taxes&fees.
+						see this charge as split transaction which include base fare,
+						taxes&fees as per the below description.
 					</Text>
+					<Text style={subheading}>Charges Description:</Text>
+					<table style={table}>
+						<tr>
+							<th style={th}>{"Amount"}</th>
+							<th style={th}>{"Description"}</th>
+						</tr>
+						{charge_data.map((item, index) => (
+							<tr key={index}>
+								<td style={td}>
+									{item.amount} {item.currency}
+								</td>
+								<td style={td}>{item.description}</td>
+							</tr>
+						))}
+					</table>{" "}
 					<Text style={subheading}>Terms and Conditions:</Text>
 					<Text>
 						Tickets are Non-Refundable/Non-Transferable and Passenger name

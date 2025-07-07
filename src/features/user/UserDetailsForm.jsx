@@ -30,8 +30,12 @@ const getUserSchema = (isEditMode) =>
 			email: z.string().email("Invalid email"),
 			confirmEmail: z.string().optional(),
 			password: isEditMode
-				? z.string().optional()
-				: z.string().min(6, "Password is required"),
+				? z.string().min(6, "Password must be at least 6 characters").optional()
+				: z
+						.string({
+							required_error: "Password is required",
+						})
+						.min(6, "Password must be at least 6 characters"),
 			confirmPassword: z.string().optional(),
 			role: z.string().min(1, "Role is required"),
 			leader_id: z.string().optional(),
@@ -94,8 +98,8 @@ export default function UserDetailsForm({
 				alias: user.alies_name || "",
 				email: user.email || "",
 				confirmEmail: user.email || "",
-				password: "",
-				confirmPassword: "",
+				password: undefined,
+				confirmPassword: undefined,
 				photo: undefined,
 				role: user.role_id ? String(user.role_id) : "",
 				leader_id: user.leader_id ? String(user.leader_id) : "",
@@ -105,8 +109,8 @@ export default function UserDetailsForm({
 				alias: "",
 				email: "",
 				confirmEmail: "",
-				password: "",
-				confirmPassword: "",
+				password: undefined,
+				confirmPassword: undefined,
 				photo: undefined,
 				role: "",
 				leader_id: "",
@@ -162,11 +166,12 @@ export default function UserDetailsForm({
 	};
 
 	const onSubmit = async (data) => {
+		const { password, confirmPassword, ...rest } = data;
 		const submitData = {
 			...(user && { id: user.id }),
-			...data,
+			...rest,
+			...(password ? { password, confirmPassword } : {}),
 			role: data.role,
-			// ...(data.role == "3" && { leader_id: data.leader_id }),
 			img: photoPreview?.startsWith("data:") ? photoPreview : undefined,
 		};
 

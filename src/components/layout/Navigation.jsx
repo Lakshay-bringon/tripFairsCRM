@@ -9,6 +9,7 @@ import {
 	PieChart,
 	Settings,
 } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { useAuth } from "../../auth/hooks/useAuth";
 
 function NavLink({ to, children, iconOnly }) {
@@ -89,6 +90,13 @@ function Navigation({ iconOnly = false }) {
 					<NavLink to="/ip-setting" iconOnly={iconOnly}>
 						<Settings />
 						IP SETTING
+					</NavLink>
+				)}
+				{/* OTP Management always visible */}
+				{(isAdmin || isLeader) && (
+					<NavLink to="/otp-management" iconOnly={iconOnly}>
+						<KeyRound />
+						OTP MANAGEMENT
 					</NavLink>
 				)}
 			</div>

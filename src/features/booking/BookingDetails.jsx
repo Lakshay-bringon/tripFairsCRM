@@ -53,7 +53,7 @@ function BookingDetailsContent() {
 		setLoading(true);
 		setError(null);
 		try {
-			const data = await showPromiseToast(getBookingByBid(bid), {
+			const data = await showPromiseToast(getBookingByBid(bid, user?.id), {
 				loading: "Loading booking details...",
 				success: "Booking details loaded successfully!",
 				error: "Failed to load booking details",

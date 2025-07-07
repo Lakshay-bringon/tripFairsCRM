@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import {
 	dispatchEmailApi,
 	dispatchEticketApi,
-} from '../api/booking/bookingApi';
-import { showPromiseToast } from '../utils/showPromiseToast';
+} from "../api/booking/bookingApi";
+import { showPromiseToast } from "../utils/showPromiseToast";
 import {
 	generateEmailSubject,
 	generateEmailHTML,
-} from '../utils/emailGenerator';
-import EmailEditor from '../components/common/EmailEditor.jsx';
-import Modal from '../components/common/Modal';
-import { useAuth } from '../auth/hooks/useAuth';
+} from "../utils/emailGenerator";
+import EmailEditor from "../components/common/EmailEditor.jsx";
+import Modal from "../components/common/Modal";
+import { useAuth } from "../auth/hooks/useAuth";
 
 // Utility function to extract body content from HTML
 const extractBodyContent = (htmlString) => {
@@ -24,14 +24,14 @@ const extractBodyContent = (htmlString) => {
 
 // Utility function to replace body content in HTML while preserving structure
 const replaceBodyContent = (originalHtml, newBodyContent) => {
-	if (originalHtml.includes('<body')) {
+	if (originalHtml.includes("<body")) {
 		return originalHtml.replace(
 			/<body[^>]*>[\s\S]*<\/body>/i,
 			`<body>${newBodyContent}</body>`
 		);
 	}
 
-	if (originalHtml.includes('<html')) {
+	if (originalHtml.includes("<html")) {
 		return originalHtml.replace(
 			/<html[^>]*>([\s\S]*)<\/html>/i,
 			`<html$1><body>${newBodyContent}</body></html>`
@@ -45,7 +45,7 @@ export default function EmailPreviewPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const [isSending, setIsSending] = useState(false);
-	const [emailHTML, setEmailHTML] = useState('');
+	const [emailHTML, setEmailHTML] = useState("");
 	const [isGenerating, setIsGenerating] = useState(true);
 	const [isEditing, setIsEditing] = useState(false);
 	const [showConfirmationModal, setShowConfirmationModal] = useState(false);
@@ -67,16 +67,16 @@ export default function EmailPreviewPage() {
 			try {
 				generateEmailHTML(transactionType, formData, emailType)
 					.then((generatedHTML) => {
+						// Simulate a 5 second delay for testing
 						setEmailHTML(generatedHTML);
+						setIsGenerating(false);
 					})
 					.catch((error) => {
-						// console.error("Error generating email HTML:", error);
-						setEmailHTML('');
+						setEmailHTML("");
+						setIsGenerating(false);
 					});
 			} catch (error) {
-				// console.error("Error generating email HTML:", error);
-				setEmailHTML('');
-			} finally {
+				setEmailHTML("");
 				setIsGenerating(false);
 			}
 		} else {
@@ -86,17 +86,17 @@ export default function EmailPreviewPage() {
 
 	const handleSendEmail = async () => {
 		if (!emailHTML) {
-			alert('No email content to send');
+			alert("No email content to send");
 			return;
 		}
 
 		if (!bid) {
-			alert('Booking ID is required to send email');
+			alert("Booking ID is required to send email");
 			return;
 		}
 
 		if (!providerId) {
-			alert('Provider ID is required to send email');
+			alert("Provider ID is required to send email");
 			return;
 		}
 
@@ -160,13 +160,13 @@ export default function EmailPreviewPage() {
 			emailPromise,
 			{
 				loading:
-					emailType === 'e-ticket'
-						? 'Dispatching e-ticket...'
-						: 'Sending email...',
+					emailType === "e-ticket"
+						? "Dispatching e-ticket..."
+						: "Sending email...",
 				success:
-					emailType === 'e-ticket'
-						? 'E-ticket dispatched successfully!'
-						: 'Email sent successfully!',
+					emailType === "e-ticket"
+						? "E-ticket dispatched successfully!"
+						: "Email sent successfully!",
 				error: (err) => err.message,
 			},
 			{
@@ -203,7 +203,7 @@ export default function EmailPreviewPage() {
 		setAttachments((prev) => [...prev, ...files]);
 		setShowAttachmentInput(false);
 		// Reset the input
-		event.target.value = '';
+		event.target.value = "";
 	};
 
 	const removeAttachment = (index) => {
@@ -211,54 +211,12 @@ export default function EmailPreviewPage() {
 	};
 
 	const formatFileSize = (bytes) => {
-		if (bytes === 0) return '0 Bytes';
+		if (bytes === 0) return "0 Bytes";
 		const k = 1024;
-		const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+		const sizes = ["Bytes", "KB", "MB", "GB"];
 		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+		return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 	};
-
-	if (isGenerating) {
-		return (
-			<div className="w-full h-full flex justify-center items-center">
-				<div className="text-center p-8">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-					<h2 className="text-xl font-semibold text-blue-400 mb-2">
-						Generating Email...
-					</h2>
-					<p className="text-gray-300">
-						Please wait while we prepare your email content.
-					</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (!emailHTML) {
-		return (
-			<div className="w-full h-full flex justify-center items-center">
-				<div className="text-center p-8">
-					<h2 className="text-xl font-semibold text-red-400 mb-4">
-						No Email Content Available
-					</h2>
-					<p className="text-gray-300 mb-2">
-						{!transactionType || !formData || !emailType
-							? 'Missing required data to generate email content.'
-							: 'Failed to generate email content. Please try again.'}
-					</p>
-					<p className="text-gray-400 text-sm mb-4">
-						Required: Transaction Type, Form Data, and Email Type
-					</p>
-					<button
-						onClick={() => window.history.back()}
-						className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-					>
-						{'<- Back'}
-					</button>
-				</div>
-			</div>
-		);
-	}
 
 	return (
 		<div className="w-full h-full flex flex-col">
@@ -297,7 +255,7 @@ export default function EmailPreviewPage() {
 				/>
 			) : (
 				<>
-					{' '}
+					{" "}
 					{/* Fixed header with Go Back on left, buttons on right */}
 					<header className="w-full h-16 bg-gray-800 border-b border-gray-600 flex items-center justify-between px-6">
 						<div className="flex justify-start">
@@ -319,13 +277,13 @@ export default function EmailPreviewPage() {
 							/>
 							<button
 								onClick={() =>
-									document.getElementById('attachment-input').click()
+									document.getElementById("attachment-input").click()
 								}
 								disabled={isGenerating}
 								className={`px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition ${
 									isGenerating
-										? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-										: ''
+										? "bg-gray-600 text-gray-400 cursor-not-allowed"
+										: ""
 								}`}
 								title="Add attachments"
 							>
@@ -337,18 +295,18 @@ export default function EmailPreviewPage() {
 								disabled={isGenerating || !emailHTML}
 								className={`px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition ${
 									isGenerating || !emailHTML
-										? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-										: ''
+										? "bg-gray-600 text-gray-400 cursor-not-allowed"
+										: ""
 								}`}
 								title={
 									isGenerating
-										? 'Generating email content...'
+										? "Generating email content..."
 										: !emailHTML
-										? 'No email content to edit'
-										: 'Edit email content'
+										? "No email content to edit"
+										: "Edit email content"
 								}
 							>
-								{isGenerating ? 'Generating...' : 'Edit'}
+								{isGenerating ? "Generating..." : "Edit"}
 							</button>
 							<button
 								onClick={handleSendEmail}
@@ -357,24 +315,24 @@ export default function EmailPreviewPage() {
 								}
 								className={`px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition ${
 									isSending || !emailHTML || !bid || !providerId || isGenerating
-										? 'bg-gray-600 text-gray-400 cursor-not-allowed'
-										: ''
+										? "bg-gray-600 text-gray-400 cursor-not-allowed"
+										: ""
 								}`}
 								title={
 									!bid || !providerId
-										? 'Missing booking/provider info'
+										? "Missing booking/provider info"
 										: isGenerating
-										? 'Generating email content...'
-										: ''
+										? "Generating email content..."
+										: ""
 								}
 							>
 								{isSending
-									? 'Sending...'
+									? "Sending..."
 									: isGenerating
-									? 'Generating...'
-									: 'Send Email'}
+									? "Generating..."
+									: "Send Email"}
 							</button>
-						</div>{' '}
+						</div>{" "}
 					</header>
 					{/* Attachments section for e-ticket emails */}
 					{attachments.length > 0 && (
@@ -405,14 +363,34 @@ export default function EmailPreviewPage() {
 						</div>
 					)}
 					{/* Email preview fills the rest of the space */}
-					<div className="flex-1 min-h-0">
-						<iframe
-							title="Email Preview"
-							srcDoc={emailHTML}
-							sandbox="allow-same-origin allow-scripts"
-							className="w-full h-full bg-white border shadow-lg rounded"
-						/>
-					</div>
+					{isGenerating ? (
+						<>
+							{console.log("Generating email...")}
+							<div className=" flex-1 min-h-0 flex justify-center items-center border border-gray-500">
+								<div className="text-center p-8">
+									{/* <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div> */}
+									<h2 className="text-xl font-semibold text-blue-400 mb-2">
+										Generating Email...
+									</h2>
+									<p className="text-gray-300">
+										Please wait while we prepare your email content.
+									</p>
+									<p className="text-gray-300">
+										If this takes too long, please go back and try again.
+									</p>
+								</div>
+							</div>
+						</>
+					) : (
+						<div className="flex-1 min-h-0">
+							<iframe
+								title="Email Preview"
+								srcDoc={emailHTML}
+								sandbox="allow-same-origin allow-scripts"
+								className="w-full h-full bg-white border shadow-lg rounded"
+							/>
+						</div>
+					)}
 				</>
 			)}
 		</div>
