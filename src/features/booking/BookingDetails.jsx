@@ -1,3 +1,4 @@
+import React, { useRef } from "react";
 import { useParams } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import BookingDetailsHeader from "./BookingDetailsHeader";
@@ -12,6 +13,7 @@ import {
 } from "../../api/booking/bookingApi";
 import { showPromiseToast } from "../../utils/showPromiseToast";
 import { useAuth } from "../../auth/hooks/useAuth";
+import { addCommentApi } from "../../api/booking/bookingApi";
 
 // Import section components
 import ProviderDetailsSection from "./sections/ProviderDetailsSection";
@@ -19,6 +21,7 @@ import ChargingDetailsSection from "./sections/ChargingDetailsSection";
 import RefundDetailsSection from "./sections/RefundDetailsSection";
 import ChargebackDetailsSection from "./sections/ChargebackDetailsSection";
 import FormSection from "./sections/FormSection";
+import { Modal } from "../../components/common";
 
 // Import context
 import { EditingProvider, useEditingContext } from "./context/EditingContext";
@@ -41,6 +44,11 @@ function BookingDetailsContent() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState(null);
 	const [apiData, setApiData] = useState(null);
+	const [showCloseModal, setShowCloseModal] = useState(false);
+	const [closeComment, setCloseComment] = useState("");
+	const [commentError, setCommentError] = useState(false);
+	const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+	const textareaRef = useRef(null);
 
 	// Fetch booking details function
 	const fetchBookingDetails = async () => {
@@ -76,6 +84,47 @@ function BookingDetailsContent() {
 	// Handle refresh
 	const handleRefresh = () => {
 		fetchBookingDetails();
+	};
+
+	useEffect(() => {
+		if (showCloseModal && textareaRef.current) {
+			textareaRef.current.focus();
+		}
+	}, [showCloseModal]);
+
+	// Store callback and data for deferred save after comment
+	const [pendingSave, setPendingSave] = useState({ cb: null, data: null });
+
+	const handleSectionSave = (cb, updateData) => {
+		setPendingSave({ cb, data: updateData });
+		setShowCloseModal(true);
+	};
+
+	const handleSaveCommentAndClose = async () => {
+		if (!closeComment.trim()) {
+			setCommentError(true);
+			return;
+		}
+		setIsSubmittingComment(true);
+		try {
+			await addCommentApi({
+				bid: apiData?.bid,
+				comment: closeComment.trim(),
+				userId: user?.id,
+			});
+			setShowCloseModal(false);
+			setCloseComment("");
+			setCommentError(false);
+			// After comment is saved, run the pending save callback
+			if (pendingSave.cb && pendingSave.data) {
+				await pendingSave.cb(pendingSave.data);
+				setPendingSave({ cb: null, data: null });
+			}
+		} catch (err) {
+			setCommentError(true);
+		} finally {
+			setIsSubmittingComment(false);
+		}
 	};
 
 	// Save provider details function
@@ -323,20 +372,31 @@ function BookingDetailsContent() {
 					{/* Provider Details Section */}
 					<ProviderDetailsSection
 						apiData={apiData}
-						onSave={saveProviderDetails}
+						onSave={(updateData) =>
+							handleSectionSave(saveProviderDetails, updateData)
+						}
 					/>
 					{/* Charging Details Section */}
 					<ChargingDetailsSection
 						apiData={apiData}
-						onSave={saveChargingDetails}
+						onSave={(updateData) =>
+							handleSectionSave(saveChargingDetails, updateData)
+						}
 					/>
 					{/* Refund Details Section */}
-					<RefundDetailsSection apiData={apiData} onSave={saveRefundDetails} />
+					<RefundDetailsSection
+						apiData={apiData}
+						onSave={(updateData) =>
+							handleSectionSave(saveRefundDetails, updateData)
+						}
+					/>
 					{/* Chargeback Details Section */}
 					<ChargebackDetailsSection
 						apiData={apiData}
-						onSave={saveChargebackDetails}
-					/>{" "}
+						onSave={(updateData) =>
+							handleSectionSave(saveChargebackDetails, updateData)
+						}
+					/>
 					{/* Form Section */}
 					<FormSection renderFormComponent={renderFormComponent} />
 				</div>
@@ -348,6 +408,49 @@ function BookingDetailsContent() {
 					imageUrl={previewImage}
 				/>
 			)}
+			<Modal
+				isOpen={showCloseModal}
+				onClose={() => {
+					setShowCloseModal(false);
+					setCloseComment("");
+					setCommentError(false);
+				}}
+				title="Add Comment"
+			>
+				<div className="flex flex-col gap-4">
+					<div>
+						<label
+							htmlFor="close-comment"
+							className="text-gray-200 font-medium"
+						>
+							Comment <span className="text-red-400">*</span>
+						</label>
+						{commentError && (
+							<p className="text-red-400 text-sm mt-1">Comment is required.</p>
+						)}
+					</div>
+					<textarea
+						id="close-comment"
+						ref={textareaRef}
+						className={`bg-gray-900 text-gray-100 rounded-lg p-4 min-h-[120px] border-2 ${
+							commentError ? "border-red-500" : "border-gray-700"
+						} focus:border-blue-500 resize-none w-full text-base shadow-md focus:outline-none focus:ring focus:ring-blue-500/30 transition-all`}
+						value={closeComment}
+						onChange={(e) => {
+							setCloseComment(e.target.value);
+							if (e.target.value.trim()) setCommentError(false);
+						}}
+						placeholder="Add a comment... (Required)"
+					/>
+					<button
+						className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+						onClick={handleSaveCommentAndClose}
+						disabled={isSubmittingComment}
+					>
+						{isSubmittingComment ? "Saving..." : "Save"}
+					</button>
+				</div>
+			</Modal>
 		</>
 	);
 }

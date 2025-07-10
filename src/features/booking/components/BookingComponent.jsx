@@ -1,30 +1,31 @@
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useLocation } from 'react-router-dom';
-import ImagePreviewModal from '../ImagePreviewModal.jsx';
-import { useDataContext } from '../../../context/DataContext.jsx';
-import { showPromiseToast } from '../../../utils/showPromiseToast.js';
+import React, { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useNavigate, useLocation } from "react-router-dom";
+import ImagePreviewModal from "../ImagePreviewModal.jsx";
+import { useDataContext } from "../../../context/DataContext.jsx";
+import { showPromiseToast } from "../../../utils/showPromiseToast.js";
 import {
 	createReservationApi,
 	updateBookingApi,
 	createReservationApiFormData,
 	updateBookingApiFormData,
-} from '../../../api/booking/bookingApi.js';
-import { bookingSchema } from '../schemas/bookingSchema.js';
-import toast from 'react-hot-toast';
-import { useAuth } from '../../../auth/hooks/useAuth.jsx';
-import { formatESTDateForInput } from '../../../utils/formatters.js';
+} from "../../../api/booking/bookingApi.js";
+import { bookingSchema } from "../schemas/bookingSchema.js";
+import toast from "react-hot-toast";
+import { useAuth } from "../../../auth/hooks/useAuth.jsx";
+import { formatESTDateForInput } from "../../../utils/formatters.js";
+import { Modal } from "../../../components/common";
 
 function BookingComponent({
 	children,
 	defaultValues,
 	onRefresh,
 	onBack,
-	type = 'NEW BOOKING',
-	loadingMessage = 'Processing...',
-	successMessage = 'Processed successfully!',
-	errorMessage = 'Processing failed',
+	type = "NEW BOOKING",
+	loadingMessage = "Processing...",
+	successMessage = "Processed successfully!",
+	errorMessage = "Processing failed",
 	schema = bookingSchema, // Use the base bookingSchema as default
 	isEditMode = false,
 }) {
@@ -48,7 +49,8 @@ function BookingComponent({
 	const [previewImage, setPreviewImage] = useState(null);
 	const [attachments, setAttachments] = useState([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const [currency, setCurrency] = useState('USD'); // Form setup
+	const [formData, setFormData] = useState(null); // Store form data for submission
+	const [currency, setCurrency] = useState("USD"); // Form setup
 	const {
 		register,
 		handleSubmit,
@@ -60,43 +62,43 @@ function BookingComponent({
 	} = useForm({
 		resolver: zodResolver(schema), // Use the passed schema instead of hardcoding bookingSchema
 		defaultValues: {
-			pnr: '',
-			customer_name: '',
-			amount: '',
-			cancellation_refund_amount: '', // Add the new field for refund components
-			future_credit_amount: '', // Add the new field for future credit components
-			rebooking_penalty: '', // Add the new field for future credit rebooking penalty
-			card_number: '', // Fixed: was cardNumber
-			airline_name: '',
+			pnr: "",
+			customer_name: "",
+			amount: "",
+			cancellation_refund_amount: "", // Add the new field for refund components
+			future_credit_amount: "", // Add the new field for future credit components
+			rebooking_penalty: "", // Add the new field for future credit rebooking penalty
+			card_number: "", // Fixed: was cardNumber
+			airline_name: "",
 			purchase_date: formatESTDateForInput(),
-			email: '',
-			phone: '',
-			card_holder: '',
-			payment_method: '',
-			billing_address: '',
-			city: '',
-			state: '',
-			zip: '',
-			country: '',
+			email: "",
+			phone: "",
+			card_holder: "",
+			payment_method: "",
+			billing_address: "",
+			city: "",
+			state: "",
+			zip: "",
+			country: "",
 			passenger_data: [
 				{
-					type: '',
-					firstName: '',
-					middleName: '',
-					lastName: '',
-					dob: '',
+					type: "",
+					firstName: "",
+					middleName: "",
+					lastName: "",
+					dob: "",
 				},
 			],
 			charge_data: [
 				{
-					amount: '',
-					currency: '',
-					description: '',
+					amount: "",
+					currency: "",
+					description: "",
 				},
 				{
-					amount: '',
-					currency: '',
-					description: '',
+					amount: "",
+					currency: "",
+					description: "",
 				},
 			],
 			image_itinerary: [], // Fixed: was itinerary_details
@@ -127,84 +129,95 @@ function BookingComponent({
 			}
 		} else {
 			reset({
-				pnr: '',
-				customer_name: '',
-				amount: '',
-				card_number: '', // Fixed: was cardNumber
-				airline_name: '',
+				pnr: "",
+				customer_name: "",
+				amount: "",
+				card_number: "", // Fixed: was cardNumber
+				airline_name: "",
 				purchase_date: formatESTDateForInput(),
-				email: '',
-				phone: '',
-				card_holder: '',
-				payment_method: '',
-				billing_address: '',
-				city: '',
-				state: '',
-				zip: '',
-				country: '',
+				email: "",
+				phone: "",
+				card_holder: "",
+				payment_method: "",
+				billing_address: "",
+				city: "",
+				state: "",
+				zip: "",
+				country: "",
 				passenger_data: [
-					{ type: '', firstName: '', middleName: '', lastName: '', dob: '' },
+					{ type: "", firstName: "", middleName: "", lastName: "", dob: "" },
 				],
 				charge_data: [
-					{ amount: '', currency: '', description: '' },
-					{ amount: '', currency: '', description: '' },
+					{ amount: "", currency: "", description: "" },
+					{ amount: "", currency: "", description: "" },
 				],
 				image_itinerary: [], // Fixed: was itinerary_details
 				attachments: [],
 			});
 			setItineraryImages([]);
 			setAttachments([]);
-			setCurrency('USD');
+			setCurrency("USD");
 		}
 	}, [formDefaultValues, reset]);
 
 	// Passenger management
 	const addPassenger = () => {
-		const currentPassengers = watch('passenger_data') || [];
-		setValue('passenger_data', [
+		const currentPassengers = watch("passenger_data") || [];
+		setValue("passenger_data", [
 			...currentPassengers,
 			{
-				type: '',
-				firstName: '',
-				middleName: '',
-				lastName: '',
-				dob: '',
+				type: "",
+				firstName: "",
+				middleName: "",
+				lastName: "",
+				dob: "",
 			},
 		]);
 	};
 
 	const removePassenger = (index) => {
-		const currentPassengers = watch('passenger_data') || [];
+		const currentPassengers = watch("passenger_data") || [];
 		if (currentPassengers.length > 1) {
 			const newPassengers = currentPassengers.filter((_, i) => i !== index);
-			setValue('passenger_data', newPassengers);
+			setValue("passenger_data", newPassengers);
 		}
 	};
 
 	// Charge management
 	const addCharge = () => {
-		const currentCharges = watch('charge_data') || [];
-		setValue('charge_data', [
+		const currentCharges = watch("charge_data") || [];
+		setValue("charge_data", [
 			...currentCharges,
 			{
-				amount: '',
-				currency: '',
-				description: '',
+				amount: "",
+				currency: "",
+				description: "",
 			},
 		]);
 	};
 
 	const removeCharge = (index) => {
-		const currentCharges = watch('charge_data') || [];
+		const currentCharges = watch("charge_data") || [];
 		if (currentCharges.length > 1) {
 			const newCharges = currentCharges.filter((_, i) => i !== index);
-			setValue('charge_data', newCharges);
+			setValue("charge_data", newCharges);
 		}
 	}; // Form submission
+	const [showCloseModal, setShowCloseModal] = useState(false);
+	const [closeComment, setCloseComment] = useState("");
+	const [commentError, setCommentError] = useState(false);
+	const textareaRef = useRef(null);
+
 	const onSubmit = async (data) => {
+		setShowCloseModal(true);
+		setFormData(data);
+	};
+
+	const createBid = async () => {
+		const data = formData;
 		if (!user) {
 			toast.error(
-				`You must be logged in to ${isEditMode ? 'update' : 'create'} a ${type}`
+				`You must be logged in to ${isEditMode ? "update" : "create"} a ${type}`
 			);
 			return;
 		}
@@ -213,12 +226,12 @@ function BookingComponent({
 		try {
 			// For itinerary: process array of images
 			const processedItinerary = (itineraryImages || []).map((img) =>
-				typeof img === 'string' && img.startsWith('data:image/') ? img : img
+				typeof img === "string" && img.startsWith("data:image/") ? img : img
 			);
 
 			// For attachments: map each image to base64 if new, or filename if unchanged
 			const processedAttachments = (attachments || []).map((img) =>
-				typeof img === 'string' && img.startsWith('data:image/') ? img : img
+				typeof img === "string" && img.startsWith("data:image/") ? img : img
 			);
 
 			// console.log(data);
@@ -238,6 +251,7 @@ function BookingComponent({
 					itinerary: processedItinerary,
 					attachments: processedAttachments,
 					bookingData: { ...cleanBookingData, currency: currency },
+					comment: closeComment.trim(),
 				};
 				await showPromiseToast(updateBookingApiFormData(updateData), {
 					loading: loadingMessage,
@@ -275,6 +289,7 @@ function BookingComponent({
 					itinerary: processedItinerary,
 					attachments: processedAttachments,
 					bookingData: { ...cleanBookingData, currency: currency },
+					comment: closeComment.trim(),
 				};
 				showPromiseToast(createReservationApiFormData(completeData), {
 					loading: loadingMessage,
@@ -300,21 +315,34 @@ function BookingComponent({
 			// 	`Error ${isEditMode ? 'updating' : 'creating'} ${type}:`,
 			// 	error
 			// );
-			if (error.message && error.message.includes('Validation errors:')) {
+			if (error.message && error.message.includes("Validation errors:")) {
 				toast.error(error.message);
 			} else if (error.message) {
 				toast.error(error.message);
 			} else {
-				toast.error(`Failed to ${isEditMode ? 'update' : 'create'} ${type}`);
+				toast.error(`Failed to ${isEditMode ? "update" : "create"} ${type}`);
 			}
 			setIsSubmitting(false);
 		}
 	};
 
+	useEffect(() => {
+		if (showCloseModal && textareaRef.current) {
+			textareaRef.current.focus();
+		}
+	}, [showCloseModal]);
+
+	const handleSaveCommentAndClose = async () => {
+		if (!closeComment.trim()) {
+			setCommentError(true);
+			return;
+		}
+		createBid();
+	};
 	// Show only the first error and focus on that field
 	const showAllErrors = (errors) => {
 		// Helper function to flatten nested errors and get the first one
-		const getFirstError = (errorsObj, parentPath = '') => {
+		const getFirstError = (errorsObj, parentPath = "") => {
 			for (const [key, value] of Object.entries(errorsObj)) {
 				const currentPath = parentPath ? `${parentPath}.${key}` : key;
 
@@ -331,7 +359,7 @@ function BookingComponent({
 				if (Array.isArray(value)) {
 					for (let i = 0; i < value.length; i++) {
 						const arrayItem = value[i];
-						if (arrayItem && typeof arrayItem === 'object') {
+						if (arrayItem && typeof arrayItem === "object") {
 							const arrayPath = `${currentPath}.${i}`;
 							const nestedError = getFirstError(arrayItem, arrayPath);
 							if (nestedError) {
@@ -342,7 +370,7 @@ function BookingComponent({
 				}
 
 				// If this is a nested object
-				if (value && typeof value === 'object' && !value.message) {
+				if (value && typeof value === "object" && !value.message) {
 					const nestedError = getFirstError(value, currentPath);
 					if (nestedError) {
 						return nestedError;
@@ -367,9 +395,9 @@ function BookingComponent({
 			if (firstError.ref) {
 				// Use the ref if available
 				field = firstError.ref;
-			} else if (firstError.fieldName === 'image_itinerary') {
+			} else if (firstError.fieldName === "image_itinerary") {
 				// Special case for itinerary drop zone
-				field = document.getElementById('image-itinerary-dropzone');
+				field = document.getElementById("image-itinerary-dropzone");
 			} else if (/^passenger_data\.\d+\.dob$/.test(firstError.fieldName)) {
 				// Special case for passenger DOB field
 				const match = firstError.fieldName.match(
@@ -395,13 +423,13 @@ function BookingComponent({
 
 				if (!field) {
 					// Try simpler name patterns
-					const simpleName = firstError.fieldName.replace(/\.\d+\./g, '.');
+					const simpleName = firstError.fieldName.replace(/\.\d+\./g, ".");
 					field = document.querySelector(`[name="${simpleName}"]`);
 				}
 
 				if (!field) {
 					// Try to find the first field that contains part of the field name
-					const fieldNameParts = firstError.fieldName.split('.');
+					const fieldNameParts = firstError.fieldName.split(".");
 					for (const part of fieldNameParts) {
 						field = document.querySelector(`[name*="${part}"]`);
 						if (field) break;
@@ -412,21 +440,21 @@ function BookingComponent({
 			if (field) {
 				// Scroll the field into view
 				field.scrollIntoView({
-					behavior: 'smooth',
-					block: 'center',
+					behavior: "smooth",
+					block: "center",
 				});
 
 				// Focus the field if possible
-				if (typeof field.focus === 'function') field.focus();
+				if (typeof field.focus === "function") field.focus();
 
 				// Add a temporary highlight effect
-				field.style.outline = '2px solid #ef4444';
-				field.style.outlineOffset = '2px';
+				field.style.outline = "2px solid #ef4444";
+				field.style.outlineOffset = "2px";
 
 				// Remove highlight after 3 seconds
 				setTimeout(() => {
-					field.style.outline = '';
-					field.style.outlineOffset = '';
+					field.style.outline = "";
+					field.style.outlineOffset = "";
 				}, 3000);
 			} else {
 				// console.log(`Could not find field for: ${firstError.fieldName}`);
@@ -473,6 +501,58 @@ function BookingComponent({
 				{React.Children.map(children, (child) =>
 					React.cloneElement(child, { ...childrenProps })
 				)}
+
+				<Modal
+					isOpen={showCloseModal}
+					onClose={() => {
+						setShowCloseModal(false);
+						setCloseComment("");
+						setCommentError(false);
+					}}
+					title="Add Comment"
+				>
+					<div className="flex flex-col gap-4">
+						<div>
+							<label
+								htmlFor="close-comment"
+								className="text-gray-200 font-medium"
+							>
+								Comment <span className="text-red-400">*</span>
+							</label>
+							{commentError && (
+								<p className="text-red-400 text-sm mt-1">
+									Comment is required.
+								</p>
+							)}
+						</div>
+						<textarea
+							id="close-comment"
+							ref={textareaRef}
+							className={`bg-gray-900 text-gray-100 rounded-lg p-4 min-h-[120px] border-2 ${
+								commentError ? "border-red-500" : "border-gray-700"
+							} focus:border-blue-500 resize-none w-full text-base shadow-md focus:outline-none focus:ring focus:ring-blue-500/30 transition-all`}
+							value={closeComment}
+							onChange={(e) => {
+								setCloseComment(e.target.value);
+								if (e.target.value.trim()) setCommentError(false);
+							}}
+							placeholder="Add a comment... (Required)"
+						/>
+						<button
+							className="w-full px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-blue-500/25 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+							onClick={handleSaveCommentAndClose}
+							disabled={isSubmitting}
+						>
+							{isEditMode
+								? isSubmitting
+									? "Updating"
+									: "Update Booking"
+								: isSubmitting
+								? "Creating Booking"
+								: "Create Booking"}
+						</button>
+					</div>
+				</Modal>
 
 				{showPreview && (
 					<ImagePreviewModal

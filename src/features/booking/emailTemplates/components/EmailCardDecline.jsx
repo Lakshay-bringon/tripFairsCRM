@@ -7,15 +7,9 @@ import {
 	Text,
 } from "@react-email/components";
 
-export const EmailCardDecline = (props) => {
-	const {
-		agent_name = "",
-		created_by = "",
-		amount = "XXX.XX",
-		currency = "USD",
-	} = props;
-
-	const agentName = agent_name || created_by || "Agent";
+export const EmailCardDecline = ({ data }) => {
+	const { amount = "", currency = "USD" } = data;
+	console.log("Email Card Decline", data);
 
 	return (
 		<Html>
@@ -47,7 +41,6 @@ export const EmailCardDecline = (props) => {
 						<Text style={signatureText}>
 							Thanks
 							<br />
-							<span style={agentNameText}>{agentName}</span>
 						</Text>
 					</div>
 

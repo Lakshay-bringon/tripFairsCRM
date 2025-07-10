@@ -15,7 +15,7 @@ import ReservationConfirmation from "./components/ReservationConfirmation";
 const DynamicEmailTemplate = ({ transactionType, formData, emailType }) => {
 	const renderTemplate = () => {
 		if (emailType === "declined") {
-			return <EmailCardDecline {...formData} />;
+			return <EmailCardDecline data={formData} />;
 		} else if (emailType === "e-ticket") {
 			return <ETicket bookingData={formData} />;
 		} else {
