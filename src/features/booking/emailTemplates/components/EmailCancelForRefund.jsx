@@ -39,6 +39,8 @@ export const EmailCancelForRefund = ({ bookingData }) => {
 		bid = "",
 		agent_name,
 		transactionType = "",
+		providerName,
+		providerEmail,
 	} = bookingData;
 
 	const fullAddress = [billing_address, city, state, zip, country]
@@ -163,9 +165,8 @@ export const EmailCancelForRefund = ({ bookingData }) => {
 					<Text style={subheading}>Price Details and Agreement:</Text>
 					<Text>
 						As per our telephonic conversation and as agreed, I{" "}
-						<strong>{customer_name}</strong>, authorize TripFairs LLC / Travel
-						Charges T F / Reservation Charges T F to charge my Debit/Credit card
-						for{" "}
+						<strong>{customer_name}</strong>, authorize {providerName} to charge
+						my Debit/Credit card for{" "}
 						<strong>
 							{amount} {currency}
 						</strong>{" "}
